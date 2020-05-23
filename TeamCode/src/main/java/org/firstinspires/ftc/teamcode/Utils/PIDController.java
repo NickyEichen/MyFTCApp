@@ -10,10 +10,10 @@ public class PIDController {
     double lastError;
     long lastTime;
 
-    public PIDController(double KP, double KD, double KI, double I_DECAY) {
+    public PIDController(double KP, double KI, double KD, double I_DECAY) {
         this.KP = KP;
-        this.KD = KD;
         this.KI = KI;
+        this.KD = KD;
         this.I_DECAY = I_DECAY;
 
         lastError = 0;
@@ -52,11 +52,15 @@ public class PIDController {
         return p*KP + integral*KI + d*KD;
     }
 
-    public void setConstants(double KP, double KD, double KI, double I_DECAY) {
+    public void setConstants(double KP, double KI, double KD, double I_DECAY) {
         this.KP = KP;
         this.KD = KD;
         this.KI = KI;
         this.I_DECAY = I_DECAY;
+    }
+
+    public double[] getConstants() {
+        return new double[] {KP, KI, KD};
     }
 
     public void resetIntegral() {

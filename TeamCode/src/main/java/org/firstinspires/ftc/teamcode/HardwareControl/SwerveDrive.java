@@ -17,7 +17,7 @@ public class SwerveDrive {
 
     SafeJsonReader zeroPositions;
 
-    Module[] myModules = new Module[4];
+    public Module[] myModules = new Module[4];
     String[] modulePositions = {"fr", "br", "bl", "fl"};
     Gyro myGyro;
 

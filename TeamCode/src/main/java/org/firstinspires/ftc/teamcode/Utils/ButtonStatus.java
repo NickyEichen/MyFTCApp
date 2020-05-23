@@ -4,6 +4,8 @@ public class ButtonStatus {
     private boolean currVal;
     private boolean lastVal;
 
+    private boolean isAutomatic;
+
     public ButtonStatus() {
         this.currVal = this.lastVal = false;
     }
