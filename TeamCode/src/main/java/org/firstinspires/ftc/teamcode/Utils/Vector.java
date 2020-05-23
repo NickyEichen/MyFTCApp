@@ -58,4 +58,10 @@ public class Vector {
     public Vector copy() {
         return cartesianVector(x, y);
     }
+
+    public Vector addCopy(Vector v) {
+        Vector newVector = copy();
+        newVector.add(v);
+        return newVector;
+    }
 }
