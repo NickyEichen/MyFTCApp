@@ -25,7 +25,7 @@ public class PIDTuner extends LinearOpMode {
         ButtonManager myButtons = new ButtonManager(gamepad1, gamepad2);
         int part = 0;
         float incr = (float) 0.1;
-        double[] constants = mySwerve.myModules[0].headingPID.getConstants();
+        float[] constants = mySwerve.myModules[0].headingPID.getConstants();
 
         Vector heading = Vector.cartesianVector(0,0);
 
@@ -59,7 +59,7 @@ public class PIDTuner extends LinearOpMode {
             telemetry.addData("Part", part);
             telemetry.addData("Incr", incr);
 
-            double h = Math.atan2(gamepad1.left_stick_x, gamepad1.left_stick_y);
+            float h = (float) Math.atan2(gamepad1.left_stick_x, gamepad1.left_stick_y);
             telemetry.addData("Target heading", h);
 
             if (gamepad1.left_trigger > 0) {

@@ -27,7 +27,7 @@ public class PIDController {
         this.KP = (float) myJsonReader.getDouble("KP");
         this.KI = (float) myJsonReader.getDouble("KI");
         this.KD = (float) myJsonReader.getDouble("KD");
-        this.I_DECAY = (float) myJsonReader.getDouble("I_Decay");
+        this.I_DECAY = (float) myJsonReader.getDouble("I_DECAY");
 
         lastError = 0;
         lastTime = 0;

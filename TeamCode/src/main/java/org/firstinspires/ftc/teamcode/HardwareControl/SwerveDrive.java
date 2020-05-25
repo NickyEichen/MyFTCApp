@@ -34,6 +34,8 @@ public class SwerveDrive {
             myModules[i] = new Module(hwMap, telemetry, modulePositions[i]);
 
         this.myGyro = myGyro;
+
+        zeroPositions = new SafeJsonReader("SwerveZeroPositions");
     }
 
     public boolean pointModules(Vector heading) {
