@@ -2,47 +2,49 @@ package org.firstinspires.ftc.teamcode.Utils;
 
 public class Vector {
 
-    private double x;
-    private double y;
+    private float x;
+    private float y;
+
+    private static final float PI = (float) Math.PI;
 
 
-    static public Vector cartesianVector(double x, double y) {
+    static public Vector cartesianVector(float x, float y) {
         Vector vec = new Vector();
         vec.setCartesian(x, y);
         return vec;
     }
 
-    static public Vector polarVector(double mag, double ang) {
+    static public Vector polarVector(float mag, float ang) {
         Vector vec = new Vector();
         vec.setPolar(mag, ang);
         return vec;
     }
 
-    public void setCartesian(double x, double y) {
+    public void setCartesian(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    public void setPolar(double mag, double ang) {
-        this.x = mag * Math.sin(ang);
-        this.y = mag * Math.cos(ang);
+    public void setPolar(float mag, float ang) {
+        this.x = mag * (float) Math.sin(ang);
+        this.y = mag * (float) Math.cos(ang);
     }
 
-    public double getX() { return x; }
-    public double getY() { return y; }
+    public float getX() { return x; }
+    public float getY() { return y; }
 
-    public double getMag() { return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); }
-    public double getAng() {
-        final double angle = Math.PI/2 - Math.atan2(y, x);
+    public float getMag() { return (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); }
+    public float getAng() {
+        final float angle = PI/2 - (float) Math.atan2(y, x);
 
-        if (angle < -Math.PI) {
-            return angle + 2 * Math.PI;
+        if (angle < -PI) {
+            return angle + 2 * PI;
         }  else {
             return angle;
         }
     }
 
-    public void shiftAngle(double ang) {
+    public void shiftAngle(float ang) {
         setPolar(getMag(), getAng() + ang);
     }
 
@@ -51,7 +53,7 @@ public class Vector {
         y += vec.getY();
     }
 
-    public void scale(double c) {
+    public void scale(float c) {
         setPolar(getMag()*c, getAng());
     }
 

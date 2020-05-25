@@ -18,15 +18,16 @@ public class SwerveDrive {
     SafeJsonReader zeroPositions;
 
     public Module[] myModules = new Module[4];
-    String[] modulePositions = {"fr", "br", "bl", "fl"};
-    Gyro myGyro;
+    private static final String[] modulePositions = {"fr", "br", "bl", "fl"};
+    private final Gyro myGyro;
 
-    boolean fieldCentric = true;
+    private boolean fieldCentric = true;
 
 
-    static final double ROTATION_SCALING = 1;
-    final static double MAX_WHEEL_VELOCITY = 2.25; // m/s
-    final static double MODULE_RADIUS = 0.2604274275110054; //m
+    private static final float ROTATION_SCALING = 1;
+    private final static float MAX_WHEEL_VELOCITY = (float) 2.25; // m/s
+    private final static float MODULE_RADIUS = (float) 0.2604274275110054; //m
+    private final static float PI = (float) Math.PI;
 
     public SwerveDrive(HardwareMap hwMap, Telemetry telemetry, Gyro myGyro) {
         for (int i = 0; i < 4; i++)
@@ -36,7 +37,7 @@ public class SwerveDrive {
     }
 
     public boolean pointModules(Vector heading) {
-        double angle = heading.getAng() - (fieldCentric? getOrientation(): 0);
+        float angle = heading.getAng() - (fieldCentric? getOrientation(): 0);
 
         boolean isFinished = true;
         for (Module module : myModules)
@@ -44,14 +45,14 @@ public class SwerveDrive {
         return isFinished;
     }
 
-    public void drivePower(Vector heading, double rotation) {
-        Vector[] rotVectors = { Vector.polarVector(rotation, 3/4*Math.PI),
-                                Vector.polarVector(rotation, 7/4*Math.PI),
-                                Vector.polarVector(rotation, 9/4*Math.PI),
-                                Vector.polarVector(rotation, 1/4*Math.PI)};
+    public void drivePower(Vector heading, float rotation) {
+        Vector[] rotVectors = { Vector.polarVector(rotation, (float) 3/4*PI),
+                                Vector.polarVector(rotation, (float) 7/4*PI),
+                                Vector.polarVector(rotation, (float) 9/4*PI),
+                                Vector.polarVector(rotation, (float) 1/4*PI)};
 
         if (fieldCentric) {
-            double shift = -getOrientation();
+            float shift = -getOrientation();
             for (Vector v : rotVectors)
                 v.shiftAngle(shift);
             heading.shiftAngle(shift);
@@ -69,15 +70,15 @@ public class SwerveDrive {
             myModules[i].drivePower(moduleVectors[i]);
     }
 
-    public void driveVelocity(Vector heading, double rotation) {
-        double moduleSpeed = rotation * MODULE_RADIUS;
-        Vector[] rotVectors = { Vector.polarVector(moduleSpeed, 3/4*Math.PI),
-                                Vector.polarVector(moduleSpeed, 7/4*Math.PI),
-                                Vector.polarVector(moduleSpeed, 9/4*Math.PI),
-                                Vector.polarVector(moduleSpeed, 1/4*Math.PI)};
+    public void driveVelocity(Vector heading, float rotation) {
+        float moduleSpeed = rotation * MODULE_RADIUS;
+        Vector[] rotVectors = { Vector.polarVector(moduleSpeed, (float)3/4*PI),
+                                Vector.polarVector(moduleSpeed, (float)7/4*PI),
+                                Vector.polarVector(moduleSpeed, (float)9/4*PI),
+                                Vector.polarVector(moduleSpeed, (float)1/4*PI)};
 
         if (fieldCentric) {
-            double shift = -getOrientation();
+            float shift = -getOrientation();
             for (Vector v : rotVectors)
                 v.shiftAngle(shift);
             heading.shiftAngle(shift);
@@ -96,18 +97,18 @@ public class SwerveDrive {
             myModules[i].driveVelocity(moduleVectors[i]);
     }
 
-    private double getOrientation() {
-        return myGyro.getHeading();
+    private float getOrientation() {
+        return (float) myGyro.getHeading();
     }
 
-    /** Destructively scales VECTORS to double MAX. */
-    private boolean normalizeVectors(Vector[] vectors, double max) {
-        double maxMag = 0;
+    /** Destructively scales VECTORS to float MAX. */
+    private boolean normalizeVectors(Vector[] vectors, float max) {
+        float maxMag = 0;
         for (Vector v : vectors) {
             maxMag = Math.max(maxMag, v.getMag());
         }
         if (maxMag > max) {
-            double scale = max/maxMag;
+            float scale = max/maxMag;
             for (Vector v:vectors)
                 v.scale(scale);
             return true;
@@ -123,14 +124,14 @@ public class SwerveDrive {
         public PIDController headingPID;
 
         boolean motorIsForward = true;
-        double zeroPosition;
+        float zeroPosition;
 
-        static final double ENCODER_MAX_VOLTAGE = 3.23;
-        static final double MAX_HEADING_ERROR = 0.05;
+        static final float ENCODER_MAX_VOLTAGE = (float) 3.23;
+        static final float MAX_HEADING_ERROR = (float) 0.05;
 
         //For driveVelocity
-        static final double RADIUS = 0.0036; // (meters)
-        static final double GEAR_RATIO = 10.736842105263158; // Reduction
+        static final float RADIUS = (float) 0.0036; // (meters)
+        static final float GEAR_RATIO = (float) 10.736842105263158; // Reduction
 
 
         Module(HardwareMap hwMap, Telemetry telemetry, String name) {
@@ -139,26 +140,23 @@ public class SwerveDrive {
             encoder = hwMap.analogInput.get(name + "Encoder");
 
             headingPID = new PIDController("SwerveSteeringPID");
-            zeroPosition = zeroPositions.getDouble(name);
+            zeroPosition = (float) zeroPositions.getDouble(name);
         }
 
         /** Steers module towards ANGLE.
          ** Returns TRUE if module has reached position, false otherwise. */
-        boolean steerModule(double angle) {
-            double error = negNormPi(getHeading() - angle);
+        boolean steerModule(float angle) {
+            float error = negNormPi(getHeading() - angle);
 
-            if (Math.abs(error) > Math.PI/2) {
+            if (Math.abs(error) > PI/2) {
                 switchDirection();
                 error = negNormPi(getHeading() - angle);
             }
 
-            double servoPow = negNormOne(headingPID.correction(error));
+            float servoPow = negNormOne(headingPID.correction(error));
             servo.setPower(servoPow);
 
-            if (error > MAX_HEADING_ERROR)
-                return false;
-            else
-                return true;
+            return !(error > MAX_HEADING_ERROR);
         }
 
         /** Drives module along Vector VEC. Interprets vector as power. */
@@ -170,20 +168,20 @@ public class SwerveDrive {
         //* Drives module along Vector VEC. Interprets vector as velocity in m/s. */
         void driveVelocity(Vector vec) {
             steerModule(vec.getAng());
-            double vel = vec.getMag() * (motorIsForward? 1: -1);
-            double angularRate = vel * RADIUS * GEAR_RATIO;
+            float vel = vec.getMag() * (motorIsForward? 1: -1);
+            float angularRate = vel * RADIUS * GEAR_RATIO;
             motor.setVelocity(angularRate, AngleUnit.RADIANS);
         }
 
 
         /** Returns the current heading of the module. */
-        double getHeading() {
-            double heading = (1 - encoder.getVoltage()/ENCODER_MAX_VOLTAGE) * 2*Math.PI;
+        float getHeading() {
+            float heading = (1 - (float) encoder.getVoltage()/ENCODER_MAX_VOLTAGE) * 2*PI;
             if (!motorIsForward)
-                heading += Math.PI;
+                heading += PI;
 
-            if (heading > Math.PI) {
-                return heading - 2*Math.PI;
+            if (heading > PI) {
+                return heading - 2*PI;
             } else {
                 return heading;
             }
@@ -199,15 +197,15 @@ public class SwerveDrive {
         }
     }
 
-    private double negNormPi(double val) {
-        return negNorm(val, Math.PI);
+    private float negNormPi(float val) {
+        return negNorm(val, PI);
     }
 
-    private double negNormOne(double val) {
+    private float negNormOne(float val) {
         return negNorm(val, 1);
     }
 
-    private double negNorm(double val, double norm) {
+    private float negNorm(float val, float norm) {
         while (val > norm) {
             val -= norm*2;
         }
