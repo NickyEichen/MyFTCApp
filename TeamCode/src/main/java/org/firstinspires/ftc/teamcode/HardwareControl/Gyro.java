@@ -45,7 +45,7 @@ public class Gyro {
 
         imuLeft.initialize(parameters);
 
-        jsonZero = new SafeJsonReader("gyroZeroPosition");
+        jsonZero = new SafeJsonReader("GyroZeroPosition");
         long writeTime = Long.parseLong(jsonZero.getString("writeTime"));
         if (System.currentTimeMillis() - writeTime < 40000) {
             zeroPositionLeft = setOnZeroTwoPi(-jsonZero.getDouble("currentAngle"));

@@ -36,7 +36,7 @@ import java.io.FileWriter;
 */
 
 public class SafeJsonReader {
-    private static final String baseDir = "/sdcard/FIRST/team9773/json18"; // must end with a name
+    private static final String baseDir = "/sdcard/FIRST/team9773/jsonS20"; // must end with a name
     private static final String TAG = "ftc9773 SafeJasonReader";
     private static final boolean DEBUG = false;
 
