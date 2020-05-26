@@ -14,6 +14,9 @@ public class ButtonManager {
     public ButtonStatus leftBumper1 = new ButtonStatus();
     public ButtonStatus rightBumper1 = new ButtonStatus();
 
+    public ButtonStatus leftTrigger = new ButtonStatus();
+    public ButtonStatus rightTrigger = new ButtonStatus();
+
 
     public ButtonManager(Gamepad gamepad1, Gamepad gamepad2) {
         gp1 = gamepad1;
@@ -28,5 +31,8 @@ public class ButtonManager {
 
         leftBumper1.recordNewValue(gp1.left_bumper);
         rightBumper1.recordNewValue(gp1.right_bumper);
+
+        leftTrigger.recordNewValue(gp1.left_trigger > 0.01);
+        rightTrigger.recordNewValue(gp1.right_trigger > 0.01);
     }
 }

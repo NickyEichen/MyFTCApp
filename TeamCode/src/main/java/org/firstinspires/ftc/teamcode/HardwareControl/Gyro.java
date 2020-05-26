@@ -41,7 +41,7 @@ public class Gyro {
         parameters.loggingEnabled       = false;
         parameters.mode                 = BNO055IMU.SensorMode.IMU;
         parameters.loggingTag           = "IMU";
-        imuLeft                         = hardwareMap.get(BNO055IMU.class, "imuLeft");
+        imuLeft                         = hardwareMap.get(BNO055IMU.class, "imu");
 
         imuLeft.initialize(parameters);
 

@@ -29,6 +29,8 @@ public class PIDTuner extends LinearOpMode {
 
         Vector heading = Vector.cartesianVector(0,0);
 
+        telemetry.addData("Initialization", "Complete");
+        telemetry.update();
         waitForStart();
         while (opModeIsActive()) {
             if (myButtons.a1.isJustOn())
@@ -59,12 +61,18 @@ public class PIDTuner extends LinearOpMode {
             telemetry.addData("Part", part);
             telemetry.addData("Incr", incr);
 
-            float h = (float) Math.atan2(gamepad1.left_stick_x, gamepad1.left_stick_y);
+            float h = (float) Math.atan2(gamepad1.left_stick_x, -gamepad1.left_stick_y);
             telemetry.addData("Target heading", h);
+
+            telemetry.addData("Encoder Voltage", mySwerve.myModules[3].encoder.getVoltage());
+            telemetry.addData("Module Heading", "" + mySwerve.myModules[3].getHeading() + "  Foward: " + mySwerve.myModules[3].motorIsForward);
 
             if (gamepad1.left_trigger > 0) {
                 heading = Vector.polarVector(1, h);
             }
+
+            if (myButtons.rightTrigger.isJustOn())
+                mySwerve.myModules[0].headingPID.saveConstants();
 
             mySwerve.pointModules(heading);
 

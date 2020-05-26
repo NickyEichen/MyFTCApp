@@ -21,7 +21,7 @@ public class SwerveDrive {
     private static final String[] modulePositions = {"fr", "br", "bl", "fl"};
     private final Gyro myGyro;
 
-    private boolean fieldCentric = true;
+    private boolean fieldCentric = false;
 
 
     private static final float ROTATION_SCALING = 1;
@@ -29,21 +29,23 @@ public class SwerveDrive {
     private final static float MODULE_RADIUS = (float) 0.2604274275110054; //m
     private final static float PI = (float) Math.PI;
 
-    public SwerveDrive(HardwareMap hwMap, Telemetry telemetry, Gyro myGyro) {
-        for (int i = 0; i < 4; i++)
-            myModules[i] = new Module(hwMap, telemetry, modulePositions[i]);
+    private final static String LOG = "SwerveController_9773";
+    private final static boolean DEBUG = true;
 
+    public SwerveDrive(HardwareMap hwMap, Telemetry telemetry, Gyro myGyro) {
+        zeroPositions = new SafeJsonReader("SwerveZeroPositions");
         this.myGyro = myGyro;
 
-        zeroPositions = new SafeJsonReader("SwerveZeroPositions");
+        for (int i = 0; i < 4; i++)
+            myModules[i] = new Module(hwMap, telemetry, modulePositions[i]);
     }
 
     public boolean pointModules(Vector heading) {
-        float angle = heading.getAng() - (fieldCentric? getOrientation(): 0);
+        float angle = heading.getAng() - (fieldCentric? getRobotOrientation(): 0);
 
         boolean isFinished = true;
         for (Module module : myModules)
-            isFinished = isFinished && module.steerModule(heading.getAng());
+            isFinished = module.steerModule(heading.getAng()) && isFinished;
         return isFinished;
     }
 
@@ -54,7 +56,7 @@ public class SwerveDrive {
                                 Vector.polarVector(rotation, (float) 1/4*PI)};
 
         if (fieldCentric) {
-            float shift = -getOrientation();
+            float shift = -getRobotOrientation();
             for (Vector v : rotVectors)
                 v.shiftAngle(shift);
             heading.shiftAngle(shift);
@@ -80,7 +82,7 @@ public class SwerveDrive {
                                 Vector.polarVector(moduleSpeed, (float)1/4*PI)};
 
         if (fieldCentric) {
-            float shift = -getOrientation();
+            float shift = -getRobotOrientation();
             for (Vector v : rotVectors)
                 v.shiftAngle(shift);
             heading.shiftAngle(shift);
@@ -99,7 +101,7 @@ public class SwerveDrive {
             myModules[i].driveVelocity(moduleVectors[i]);
     }
 
-    private float getOrientation() {
+    private float getRobotOrientation() {
         return (float) myGyro.getHeading();
     }
 
@@ -122,13 +124,14 @@ public class SwerveDrive {
     public class Module {
         DcMotorEx motor;
         CRServo servo;
-        AnalogInput encoder;
+        public AnalogInput encoder;
         public PIDController headingPID;
+        String name;
 
-        boolean motorIsForward = true;
+        public boolean motorIsForward = true;
         float zeroPosition;
 
-        static final float ENCODER_MAX_VOLTAGE = (float) 3.23;
+        static final float ENCODER_MAX_VOLTAGE = (float) 5.0;
         static final float MAX_HEADING_ERROR = (float) 0.05;
 
         //For driveVelocity
@@ -143,6 +146,7 @@ public class SwerveDrive {
 
             headingPID = new PIDController("SwerveSteeringPID");
             zeroPosition = (float) zeroPositions.getDouble(name);
+            this.name = name;
         }
 
         /** Steers module towards ANGLE.
@@ -155,8 +159,11 @@ public class SwerveDrive {
                 error = negNormPi(getHeading() - angle);
             }
 
-            float servoPow = negNormOne(headingPID.correction(error));
+            float servoPow = minMaxOne(headingPID.correction(error, DEBUG && name.equals("fl")));
             servo.setPower(servoPow);
+            if (DEBUG && name.equals("fl")) {
+                //Log.i(LOG, "Motor Fowards: " + motorIsForward + "  Error: " + error + "  Power: " + servoPow + "  DT: " + headingPID.dt);
+            }
 
             return !(error > MAX_HEADING_ERROR);
         }
@@ -177,8 +184,8 @@ public class SwerveDrive {
 
 
         /** Returns the current heading of the module. */
-        float getHeading() {
-            float heading = (1 - (float) encoder.getVoltage()/ENCODER_MAX_VOLTAGE) * 2*PI;
+        public float getHeading() {
+            float heading = (float) encoder.getVoltage()/ENCODER_MAX_VOLTAGE * 2*PI;
             if (!motorIsForward)
                 heading += PI;
 
@@ -203,8 +210,8 @@ public class SwerveDrive {
         return negNorm(val, PI);
     }
 
-    private float negNormOne(float val) {
-        return negNorm(val, 1);
+    private float minMaxOne(float val) {
+        return Math.min(Math.max(val, -1), 1);
     }
 
     private float negNorm(float val, float norm) {
