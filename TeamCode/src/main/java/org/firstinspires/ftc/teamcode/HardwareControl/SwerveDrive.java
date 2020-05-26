@@ -21,7 +21,7 @@ public class SwerveDrive {
     private static final String[] modulePositions = {"fr", "br", "bl", "fl"};
     private final Gyro myGyro;
 
-    private boolean fieldCentric = false;
+    private boolean fieldCentric = true;
 
 
     private static final float ROTATION_SCALING = 1;
@@ -204,14 +204,28 @@ public class SwerveDrive {
         private void stopModule() {
             motor.setMotorDisable();
         }
+
+        private void setZeroPosition() {
+            zeroPosition = getHeading();
+            zeroPositions.modifyDouble(name, zeroPosition);
+        }
     }
+
+    public void zeroModulePositions() {
+        for (Module m : myModules)
+            m.setZeroPosition();
+        zeroPositions.updateFile();
+    }
+
 
     private float negNormPi(float val) {
         return negNorm(val, PI);
     }
 
     private float minMaxOne(float val) {
-        return Math.min(Math.max(val, -1), 1);
+        if (val > 1) return 1;
+        if (val < -1) return -1;
+        return val;
     }
 
     private float negNorm(float val, float norm) {

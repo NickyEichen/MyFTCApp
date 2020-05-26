@@ -61,20 +61,22 @@ public class PIDTuner extends LinearOpMode {
             telemetry.addData("Part", part);
             telemetry.addData("Incr", incr);
 
-            float h = (float) Math.atan2(gamepad1.left_stick_x, -gamepad1.left_stick_y);
-            telemetry.addData("Target heading", h);
-
             telemetry.addData("Encoder Voltage", mySwerve.myModules[3].encoder.getVoltage());
             telemetry.addData("Module Heading", "" + mySwerve.myModules[3].getHeading() + "  Foward: " + mySwerve.myModules[3].motorIsForward);
 
+            heading = Vector.cartesianVector(gamepad1.left_stick_x, -gamepad1.left_stick_y);
             if (gamepad1.left_trigger > 0) {
-                heading = Vector.polarVector(1, h);
+                mySwerve.pointModules(heading);
+            } else {
+                mySwerve.drivePower(heading, gamepad1.right_stick_x);
             }
 
             if (myButtons.rightTrigger.isJustOn())
                 mySwerve.myModules[0].headingPID.saveConstants();
 
-            mySwerve.pointModules(heading);
+            if (gamepad2.y)
+                mySwerve.zeroModulePositions();
+
 
             myButtons.update();
             telemetry.update();
