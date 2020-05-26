@@ -91,5 +91,6 @@ public class PIDController {
         myJsonReader.modifyDouble("KI", KI);
         myJsonReader.modifyDouble("KD", KD);
         myJsonReader.modifyDouble("I_DECAY", I_DECAY);
+        myJsonReader.updateFile();
     }
 }
