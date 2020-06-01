@@ -59,7 +59,7 @@ public class PIDController {
 
         this.dt = dt;
 
-        if (debug) Log.i("Swerve_PID", "Error: " + error + "  Power: " + (p*KP + integral*KI + d*KD) + "  P: " + p*KP + "  I: " + integral*KI + "  D: " + d*KD);
+        if (debug) Log.i("Swerve_PID", "Error: " + error + "  Power: " + (p*KP + integral*KI + d*KD) + "  P: " + p*KP + "  I: " + integral*KI + "  D: " + d*KD + "dT" + dt);
 
         return p*KP + integral*KI + d*KD;
     }

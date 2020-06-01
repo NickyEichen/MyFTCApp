@@ -33,9 +33,9 @@ public class PIDTuner extends LinearOpMode {
         telemetry.update();
         waitForStart();
         while (opModeIsActive()) {
-            if (myButtons.a1.isJustOn())
+            if (myButtons.x1.isJustOn())
                 incr *= 0.1;
-            if (myButtons.y1.isJustOn())
+            if (myButtons.b1.isJustOn())
                 incr *= 10;
 
             if (myButtons.leftBumper1.isJustOn())
@@ -43,14 +43,14 @@ public class PIDTuner extends LinearOpMode {
             if (myButtons.rightBumper1.isJustOn())
                 if (++part > 2) part -= 3;
 
-            if (myButtons.x1.isJustOn()) {
+            if (myButtons.a1.isJustOn()) {
                 constants[part] -= incr;
                 for (SwerveDrive.Module m : mySwerve.myModules) {
                     m.headingPID.setConstants(constants[0], constants[1], constants[2], 0.9);
                 }
             }
 
-            if (myButtons.b1.isJustOn()) {
+            if (myButtons.y1.isJustOn()) {
                 constants[part] += incr;
                 for (SwerveDrive.Module m : mySwerve.myModules) {
                     m.headingPID.setConstants(constants[0], constants[1], constants[2], 0.9);
@@ -64,19 +64,21 @@ public class PIDTuner extends LinearOpMode {
             telemetry.addData("Encoder Voltage", mySwerve.myModules[3].encoder.getVoltage());
             telemetry.addData("Module Heading", "" + mySwerve.myModules[3].getHeading() + "  Foward: " + mySwerve.myModules[3].motorIsForward);
 
-            heading = Vector.cartesianVector(gamepad1.left_stick_x, -gamepad1.left_stick_y);
-            if (gamepad1.left_trigger > 0) {
-                mySwerve.pointModules(heading);
-            } else {
-                mySwerve.drivePower(heading, gamepad1.right_stick_x);
-            }
+            if (gamepad1.dpad_up) heading = Vector.cartesianVector(0, 1);
+            if (gamepad1.dpad_down) heading = Vector.cartesianVector(0, -1);
+            if (gamepad1.dpad_left) heading = Vector.cartesianVector(-1, 0);
+            if (gamepad1.dpad_right) heading = Vector.cartesianVector(1, 0);
+
+            if (gamepad1.left_trigger > 0) heading = Vector.polarVector(-gamepad1.right_stick_y, (float) Math.atan2(gamepad1.left_stick_x, -gamepad1.left_stick_y));
+
+            mySwerve.pointModules(heading);
+            telemetry.addData("Target Heading", heading.getAng());
 
             if (myButtons.rightTrigger.isJustOn())
                 mySwerve.myModules[0].headingPID.saveConstants();
 
             if (gamepad2.y)
                 mySwerve.zeroModulePositions();
-
 
             myButtons.update();
             telemetry.update();

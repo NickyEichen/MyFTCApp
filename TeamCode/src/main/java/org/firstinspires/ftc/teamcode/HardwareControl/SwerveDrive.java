@@ -185,7 +185,7 @@ public class SwerveDrive {
 
         /** Returns the current heading of the module. */
         public float getHeading() {
-            float heading = (float) encoder.getVoltage()/ENCODER_MAX_VOLTAGE * 2*PI;
+            float heading = (1 - ((float) encoder.getVoltage())/ENCODER_MAX_VOLTAGE) * 2*PI;
             if (!motorIsForward)
                 heading += PI;
 

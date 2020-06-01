@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -18,14 +20,16 @@ public class SimpleSwerveTest extends LinearOpMode {
 
         waitForStart();
 
-        float power = 0;
+        float power = (float) 0.1;
 
 
         while (opModeIsActive()) {
             telemetry.addData("Voltage", encoder.getVoltage());
 
             telemetry.addData("Servo Power", power);
-            servo.setPower(power);
+
+            Log.i("ServoTest", "Pos: " + (1 - encoder.getVoltage()/5)*2*Math.PI + " Time: " + System.currentTimeMillis());
+            if (myButtons.leftBumper1.isOn()) servo.setPower(power);
 
             if (myButtons.a1.isJustOn()) power -= 0.1;
             if (myButtons.y1.isJustOn()) power += 0.1;
