@@ -21,7 +21,6 @@ public class SwerveDrive {
     private static final String[] modulePositions = {"fr", "br", "bl", "fl"};
     private final Gyro myGyro;
 
-    private boolean fieldCentric = true;
 
 
     private static final float ROTATION_SCALING = 1;
@@ -32,6 +31,13 @@ public class SwerveDrive {
     private final static String LOG = "SwerveController_9773";
     private final static boolean DEBUG = true;
 
+
+    private boolean fieldCentric = true;
+    private Vector targetHeading;
+    private float targetRotation;
+    private boolean targetIsPower;
+
+    // INIT
     public SwerveDrive(HardwareMap hwMap, Telemetry telemetry, Gyro myGyro) {
         zeroPositions = new SafeJsonReader("SwerveZeroPositions");
         this.myGyro = myGyro;
@@ -40,7 +46,10 @@ public class SwerveDrive {
             myModules[i] = new Module(hwMap, telemetry, modulePositions[i]);
     }
 
+    // Public Interface
     public boolean pointModules(Vector heading) {
+        targetHeading.setCartesian(0,0);
+
         float angle = heading.getAng() - (fieldCentric? getRobotOrientation(): 0);
 
         boolean isFinished = true;
@@ -49,7 +58,29 @@ public class SwerveDrive {
         return isFinished;
     }
 
-    public void drivePower(Vector heading, float rotation) {
+    public void update() {
+        if (targetIsPower)
+            drivePower(targetHeading, targetRotation);
+        else
+            driveVelocity(targetHeading, targetRotation);
+    }
+
+    public void setTargetPower(Vector heading, float rotation) {
+        targetHeading = heading;
+        targetRotation = rotation;
+        targetIsPower = true;
+    }
+
+    public void setTargetVelocity(Vector heading, float rotation) {
+        targetHeading = heading;
+        targetRotation = rotation;
+        targetIsPower = false;
+    }
+
+    // Internal Drive Functions
+    private void drivePower(Vector heading, float rotation) {
+        if (heading.getMag() == 0 && rotation == 0) return;
+
         Vector[] rotVectors = { Vector.polarVector(rotation, (float) 3/4*PI),
                                 Vector.polarVector(rotation, (float) 7/4*PI),
                                 Vector.polarVector(rotation, (float) 9/4*PI),
@@ -74,7 +105,9 @@ public class SwerveDrive {
             myModules[i].drivePower(moduleVectors[i]);
     }
 
-    public void driveVelocity(Vector heading, float rotation) {
+    private void driveVelocity(Vector heading, float rotation) {
+        if (heading.getMag() == 0 && rotation == 0) return;
+
         float moduleSpeed = rotation * MODULE_RADIUS;
         Vector[] rotVectors = { Vector.polarVector(moduleSpeed, (float)3/4*PI),
                                 Vector.polarVector(moduleSpeed, (float)7/4*PI),
@@ -102,7 +135,7 @@ public class SwerveDrive {
     }
 
     private float getRobotOrientation() {
-        return (float) myGyro.getHeading();
+        return myGyro.getHeading();
     }
 
     /** Destructively scales VECTORS to float MAX. */

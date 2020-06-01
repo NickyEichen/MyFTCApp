@@ -20,12 +20,12 @@ public class Gyro {
     BNO055IMU imuLeft;
     //BNO055IMU imuRight;
 
-    private double currentPosition;
+    private float currentPosition;
 
-    private double lastReadTime = -1;
+    private long lastReadTime = -1;
     private static final int minReadDeltaTime = 40;
 
-    private double zeroPositionLeft = 0;
+    private float zeroPositionLeft = 0;
     private SafeJsonReader jsonZero;
 
     //private double zeroPositionRight = 0;
@@ -49,16 +49,19 @@ public class Gyro {
         jsonZero = new SafeJsonReader("GyroZeroPosition");
         long writeTime = Long.parseLong(jsonZero.getString("writeTime"));
         if (System.currentTimeMillis() - writeTime < 40000) {
-            zeroPositionLeft = setOnZeroTwoPi(-jsonZero.getDouble("currentAngle"));
+            zeroPositionLeft = setOnZeroTwoPi((float) -jsonZero.getDouble("currentAngle"));
         }
     }
 
-    public double getImuReading() {
-        return -imuLeft.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS).thirdAngle;
+    public float getHeading() {
+        return currentPosition;
     }
 
-    public double getHeading () {
+    public float getImuReading() {
+        return (float) -imuLeft.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS).thirdAngle;
+    }
 
+    public void update() {
         // Only read again if it has been at least 80 ms
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastReadTime > minReadDeltaTime) {
@@ -66,18 +69,14 @@ public class Gyro {
             lastReadTime = currentTime;
             if (DEBUG) { Log.e(TAG, "Got new gyro position - Read: " + currentPosition + "Actual position - " + getImuReading()); }
         }
-
-        return currentPosition;
     }
 
-
     public void setZeroPosition() {
-        this.zeroPositionLeft = getImuReading();
+        this.zeroPositionLeft = (float) getImuReading();
         currentPosition = 0;
     }
 
-
-    public double setOnZeroTwoPi(double angle) {
+    public float setOnZeroTwoPi(float angle) {
         while (angle > 2*Math.PI) {
             angle -= 2*Math.PI;
         }
