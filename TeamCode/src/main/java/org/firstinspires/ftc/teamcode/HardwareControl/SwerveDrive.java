@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Utils.PIDController;
 import org.firstinspires.ftc.teamcode.Utils.SafeJsonReader;
+import org.firstinspires.ftc.teamcode.Utils.UpdateLoopController;
 import org.firstinspires.ftc.teamcode.Utils.Vector;
 
 public class SwerveDrive {
@@ -33,9 +34,9 @@ public class SwerveDrive {
 
 
     private boolean fieldCentric = true;
-    private Vector targetHeading;
-    private float targetRotation;
-    private boolean targetIsPower;
+    private Vector targetHeading = Vector.cartesianVector(0, 0);
+    private float targetRotation = 0;
+    private boolean targetIsPower = true;
 
     // INIT
     public SwerveDrive(HardwareMap hwMap, Telemetry telemetry, Gyro myGyro) {
@@ -46,15 +47,19 @@ public class SwerveDrive {
             myModules[i] = new Module(hwMap, telemetry, modulePositions[i]);
     }
 
-    // Public Interface
+    // Public Functions
     public boolean pointModules(Vector heading) {
         targetHeading.setCartesian(0,0);
+        targetRotation = 0;
+
 
         float angle = heading.getAng() - (fieldCentric? getRobotOrientation(): 0);
 
         boolean isFinished = true;
-        for (Module module : myModules)
-            isFinished = module.steerModule(heading.getAng()) && isFinished;
+        for (Module module : myModules) {
+            module.setHeading(heading.getAng());
+            isFinished = isFinished && module.reachedTarget();
+        }
         return isFinished;
     }
 
@@ -154,7 +159,7 @@ public class SwerveDrive {
     }
 
     /** Class represents one swerve module. */
-    public class Module {
+    public class Module extends UpdateLoopController {
         DcMotorEx motor;
         CRServo servo;
         public AnalogInput encoder;
@@ -162,7 +167,7 @@ public class SwerveDrive {
         String name;
 
         public boolean motorIsForward = true;
-        float zeroPosition;
+        float zeroPosition = 0;
 
         static final float ENCODER_MAX_VOLTAGE = (float) 5.0;
         static final float MAX_HEADING_ERROR = (float) 0.05;
@@ -170,6 +175,10 @@ public class SwerveDrive {
         //For driveVelocity
         static final float RADIUS = (float) 0.0036; // (meters)
         static final float GEAR_RATIO = (float) 10.736842105263158; // Reduction
+
+        // For object permenance :) jkjk saves current state
+        private float currentAngle = 0;
+        private float targetAngle = 0;
 
 
         Module(HardwareMap hwMap, Telemetry telemetry, String name) {
@@ -182,34 +191,45 @@ public class SwerveDrive {
             this.name = name;
         }
 
-        /** Steers module towards ANGLE.
-         ** Returns TRUE if module has reached position, false otherwise. */
-        boolean steerModule(float angle) {
-            float error = negNormPi(getHeading() - angle);
+        /** Overrides update from UpdateLoopController.
+         * Updates loop to point towards targetangle.
+         * Saves whether it has reached its heading. */
+        @Override
+        public void update() {
+            currentAngle = getHeading();
+            float error = negNormPi(currentAngle - targetAngle);
 
             if (Math.abs(error) > PI/2) {
                 switchDirection();
-                error = negNormPi(getHeading() - angle);
+                error = negNormPi(getHeading() - targetAngle);
             }
 
             float servoPow = minMaxOne(headingPID.correction(error, DEBUG && name.equals("fl")));
             servo.setPower(servoPow);
-            if (DEBUG && name.equals("fl")) {
-                //Log.i(LOG, "Motor Fowards: " + motorIsForward + "  Error: " + error + "  Power: " + servoPow + "  DT: " + headingPID.dt);
-            }
+            //if (DEBUG && name.equals("fl")) Log.i(LOG, "Motor Fowards: " + motorIsForward + "  Error: " + error + "  Power: " + servoPow + "  DT: " + headingPID.dt);
+        }
 
-            return !(error > MAX_HEADING_ERROR);
+        public boolean reachedTarget() {
+            return Math.abs(negNormPi(targetAngle - currentAngle)) < MAX_HEADING_ERROR;
+        }
+
+        public float getCurrentAngle() {
+            return currentAngle;
+        }
+
+        private void setHeading(float angle) {
+            targetAngle = angle;
         }
 
         /** Drives module along Vector VEC. Interprets vector as power. */
         void drivePower(Vector vec) {
-            steerModule(vec.getAng());
+            setHeading(vec.getAng());
             motor.setPower(vec.getMag() * (motorIsForward ? 1 : -1));
         }
 
         //* Drives module along Vector VEC. Interprets vector as velocity in m/s. */
         void driveVelocity(Vector vec) {
-            steerModule(vec.getAng());
+            setHeading(vec.getAng());
             float vel = vec.getMag() * (motorIsForward? 1: -1);
             float angularRate = vel * RADIUS * GEAR_RATIO;
             motor.setVelocity(angularRate, AngleUnit.RADIANS);
@@ -217,7 +237,7 @@ public class SwerveDrive {
 
 
         /** Returns the current heading of the module. */
-        public float getHeading() {
+        private float getHeading() {
             float heading = (1 - ((float) encoder.getVoltage())/ENCODER_MAX_VOLTAGE) * 2*PI;
             if (!motorIsForward)
                 heading += PI;

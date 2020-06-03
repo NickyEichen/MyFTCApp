@@ -8,8 +8,8 @@ import org.firstinspires.ftc.teamcode.Utils.UpdateLoopThread;
 public class Robot {
 
     private Telemetry telemetry;
-    private Gyro myGyro;
-    private SwerveDrive mySwerve;
+    public Gyro myGyro;
+    public SwerveDrive mySwerve;
     private UpdateLoopThread secondThread = new UpdateLoopThread();
 
     public Robot(HardwareMap hwMap, Telemetry telemetry) {
@@ -26,6 +26,7 @@ public class Robot {
     public void startAsyncThread() {
         secondThread.start();
     }
+    
     public void killAsyncThread() {
         secondThread.exit();
     }

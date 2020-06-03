@@ -5,7 +5,7 @@ import android.widget.Button;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.HardwareControl.Gyro;
+import org.firstinspires.ftc.teamcode.HardwareControl.Robot;
 import org.firstinspires.ftc.teamcode.HardwareControl.SwerveDrive;
 import org.firstinspires.ftc.teamcode.Utils.ButtonManager;
 import org.firstinspires.ftc.teamcode.Utils.ButtonStatus;
@@ -14,13 +14,13 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 @TeleOp(name = "PID Tuner")
 public class PIDTuner extends LinearOpMode {
 
-    Gyro myGyro;
+    Robot myRobot;
     SwerveDrive mySwerve;
 
     @Override
     public void runOpMode() {
-        myGyro = new Gyro(hardwareMap);
-        mySwerve = new SwerveDrive(hardwareMap, telemetry, myGyro);
+        myRobot = new Robot(hardwareMap, telemetry);
+        mySwerve = myRobot.mySwerve;
 
         ButtonManager myButtons = new ButtonManager(gamepad1, gamepad2);
         int part = 0;
@@ -32,6 +32,7 @@ public class PIDTuner extends LinearOpMode {
         telemetry.addData("Initialization", "Complete");
         telemetry.update();
         waitForStart();
+        myRobot.startAsyncThread();
         while (opModeIsActive()) {
             if (myButtons.x1.isJustOn())
                 incr *= 0.1;
@@ -62,7 +63,7 @@ public class PIDTuner extends LinearOpMode {
             telemetry.addData("Incr", incr);
 
             telemetry.addData("Encoder Voltage", mySwerve.myModules[3].encoder.getVoltage());
-            telemetry.addData("Module Heading", "" + mySwerve.myModules[3].getHeading() + "  Foward: " + mySwerve.myModules[3].motorIsForward);
+            telemetry.addData("Module Heading", "" + mySwerve.myModules[3].getCurrentAngle() + "  Foward: " + mySwerve.myModules[3].motorIsForward);
 
             if (gamepad1.dpad_up) heading = Vector.cartesianVector(0, 1);
             if (gamepad1.dpad_down) heading = Vector.cartesianVector(0, -1);
@@ -82,7 +83,9 @@ public class PIDTuner extends LinearOpMode {
 
             myButtons.update();
             telemetry.update();
+            myRobot.update();
         }
+        myRobot.killAsyncThread();
 
     }
 }
